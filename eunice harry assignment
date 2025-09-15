@@ -1,0 +1,54 @@
+import datetime
+import os
+
+class DuplicateVisitorError(Exception):
+    pass
+
+def get_last_visitor(file_name):
+    try:
+        with open(file_name, "r") as file:
+            lines = file.readlines()
+            if lines:
+                return lines[-1].split(",")[0].strip()
+            else:
+                return None
+    except FileNotFoundError:
+        return None
+
+def add_visitor(file_name, name):
+    with open(file_name, "a") as file:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        file.write(f"{name}, {timestamp}\n")
+
+    def check_time_difference(file_name):
+        try:
+            with open(file_name, "r") as file:
+                lines = file.readlines()
+                if lines:
+                    last_visit_time = datetime.datetime.strptime(lines[-1].split(",")[1].strip(), "%Y-%m-%d %H:%M:%S")
+                    time_diff = (datetime.datetime.now() - last_visit_time).total_seconds() / 60
+                    return time_diff >= 5
+                else:
+                    return True
+        except FileNotFoundError:
+            return True
+def main():
+    file_name = "visitors.txt"
+    try:
+        name = input("Enter visitor's name: ")
+        last_visitor = get_last_visitor(file_name)
+        if last_visitor == name:
+            raise DuplicateVisitorError("Duplicate visitor not allowed")
+        
+        if check_time_difference(file_name):
+            add_visitor(file_name, name)
+            print(f"Visitor {name} added successfully")
+        else:
+            print("Another visitor is not allowed until after 5 minuites")
+    except DuplicateVisitorError as e:
+        print(e)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    main()
